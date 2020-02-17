@@ -1,4 +1,4 @@
-# zookeeper
+# ZooKeeper monitoring with Netdata
 
 [`ZooKeeper`](https://zookeeper.apache.org/) is a centralized service for maintaining configuration information, naming, providing distributed synchronization, and providing group services. 
 
@@ -24,6 +24,14 @@ It produces the following charts:
 -   Server State in `state`
 
 ## Configuration
+
+Edit the `go.d/zookeeper.conf` configuration file using `edit-config` from the your agent's [config
+directory](../../../../docs/step-by-step/step-04.md#find-your-netdataconf-file), which is typically at `/etc/netdata`.
+
+```bash
+cd /etc/netdata # Replace this path with your Netdata config directory
+sudo ./edit-config go.d/zookeeper.conf
+```
 
 Needs only `address` to server's client port. Here is an example for 2 servers:
 

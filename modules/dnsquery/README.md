@@ -1,6 +1,6 @@
-# dns_query
+# DNS queries monitoring with Netdata
 
-This module provides DNS query time in milliseconds.
+This module provides DNS query RTT in milliseconds.
 
 ## Charts
 
@@ -9,6 +9,14 @@ It produces only one chart:
 -   Query Time in `milliseconds`
 
 ## Configuration
+
+Edit the `go.d/dns_query.conf` configuration file using `edit-config` from the your agent's [config
+directory](../../../../docs/step-by-step/step-04.md#find-your-netdataconf-file), which is typically at `/etc/netdata`.
+
+```bash
+cd /etc/netdata # Replace this path with your Netdata config directory
+sudo ./edit-config go.d/dns_query.conf
+```
 
 Here is an example:
 

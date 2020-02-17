@@ -1,4 +1,4 @@
-# springboot2
+# Any Spring Boot 2 application monitoring with Netdata
 
 This module monitors one or more Java Spring-boot 2 applications depending on configuration.
 Netdata can be used to monitor running Java [Spring Boot 2](https://spring.io/) applications that expose their metrics with the use of the **Spring Boot Actuator** included in Spring Boot library.
@@ -16,6 +16,14 @@ Springboot2 module looks up `http://localhost:8080/actuator/prometheus` and `htt
 -   Uptime in `seconds`
 
 ## Configuration
+
+Edit the `go.d/springboot2.conf` configuration file using `edit-config` from the your agent's [config
+directory](../../../../docs/step-by-step/step-04.md#find-your-netdataconf-file), which is typically at `/etc/netdata`.
+
+```bash
+cd /etc/netdata # Replace this path with your Netdata config directory
+sudo ./edit-config go.d/springboot2.conf
+```
 
 The Spring Boot Actuator exposes these metrics over HTTP and is very easy to use:
 

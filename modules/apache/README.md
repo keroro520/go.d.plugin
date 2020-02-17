@@ -1,8 +1,8 @@
-# apache
+# Apache monitoring with Netdata
 
 [`Apache`](https://httpd.apache.org/) is an open-source HTTP server for modern operating systems including UNIX and Windows.
 
-This module will monitor one or more `Apache` servers depending on configuration.
+This module will monitor one or more `Apache` servers, depending on your configuration.
 
 ## Requirements
 
@@ -23,6 +23,14 @@ It produces the following charts:
 -   Lifetime Average Response Size in `KiB`
 
 ## Configuration
+
+Edit the `go.d/apache.conf` configuration file using `edit-config` from the your agent's [config
+directory](../../../../docs/step-by-step/step-04.md#find-your-netdataconf-file), which is typically at `/etc/netdata`.
+
+```bash
+cd /etc/netdata # Replace this path with your Netdata config directory
+sudo ./edit-config go.d/apache.conf
+```
 
 Needs only `url` to server's `server-status?auto`. Here is an example for 2 servers:
 

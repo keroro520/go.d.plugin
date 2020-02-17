@@ -1,8 +1,8 @@
-# mysql
+# MySQL monitoring with Netdata
 
 [`MySQL`](https://www.mysql.com/) is an open-source relational database management system.
 
-This module will monitor one or more `MySQL` servers depending on configuration.
+This module will monitor one or more `MySQL` servers, depending on your configuration.
 
 ## Requirements
 
@@ -68,6 +68,14 @@ It will produce following charts:
 -   Flow Control in `ms`
 
 ## Configuration
+
+Edit the `go.d/mysql.conf` configuration file using `edit-config` from the your agent's [config
+directory](../../../../docs/step-by-step/step-04.md#find-your-netdataconf-file), which is typically at `/etc/netdata`.
+
+```bash
+cd /etc/netdata # Replace this path with your Netdata config directory
+sudo ./edit-config go.d/mysql.conf
+```
 
 [DSN syntax in details](https://github.com/go-sql-driver/mysql#dsn-data-source-name).
 

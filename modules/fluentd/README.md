@@ -1,8 +1,8 @@
-# fluentd
+# Fluentd monitoring with Netdata
 
 [`Fluentd`](https://www.fluentd.org/) is an open source data collector for unified logging layer.
 
-This module will monitor one or more `Fluentd` servers depending on configuration. It gathers metrics from plugin endpoint provided by [in_monitor plugin](https://docs.fluentd.org/v1.0/articles/monitoring-rest-api).
+This module will monitor one or more `Fluentd` servers, depending on your configuration. It gathers metrics from plugin endpoint provided by [in_monitor plugin](https://docs.fluentd.org/v1.0/articles/monitoring-rest-api).
 
 ## Requirements
 
@@ -17,6 +17,14 @@ It produces the following charts:
 -   Plugin Buffer Total Size in `buffer`
 
 ## Configuration
+
+Edit the `go.d/fluentd.conf` configuration file using `edit-config` from the your agent's [config
+directory](../../../../docs/step-by-step/step-04.md#find-your-netdataconf-file), which is typically at `/etc/netdata`.
+
+```bash
+cd /etc/netdata # Replace this path with your Netdata config directory
+sudo ./edit-config go.d/fluentd.conf
+```
 
 Needs only `url`. Here is an example for 2 servers:
 

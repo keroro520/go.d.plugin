@@ -1,4 +1,4 @@
-# unbound
+# Unbound monitoring with Netdata
 
 [`Unbound`](https://nlnetlabs.nl/projects/unbound/about/) is a validating, recursive, and caching DNS resolver product from NLnet Labs.
 
@@ -75,6 +75,14 @@ Per thread charts (only if number of threads > 1):
 
 
 ## Configuration
+
+Edit the `go.d/unbound.conf` configuration file using `edit-config` from the your agent's [config
+directory](../../../../docs/step-by-step/step-04.md#find-your-netdataconf-file), which is typically at `/etc/netdata`.
+
+```bash
+cd /etc/netdata # Replace this path with your Netdata config directory
+sudo ./edit-config go.d/unbound.conf
+```
 
 This Unbound collector only needs the `address` to a server's `remote-control` interface if TLS is disabled or `address` of unix socket.
 Otherwise you need to set path to the `control-key-file` and `control-cert-file` files.

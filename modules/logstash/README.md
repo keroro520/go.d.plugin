@@ -1,8 +1,8 @@
-# logstash
+# Logstash monitoring with Netdata
 
 [`Logstash`](https://www.elastic.co/products/logstash) is an open-source data processing pipeline that allows you to collect, process, and load data into `Elasticsearch`.
 
-This module will monitor one or more `Logstash` instances depending on configuration.
+This module will monitor one or more `Logstash` instances, depending on your configuration.
 
 ## Charts
 
@@ -19,6 +19,14 @@ It produces following charts:
 -   Uptime in `time`
 
 ## Configuration
+
+Edit the `go.d/logstash.conf` configuration file using `edit-config` from the your agent's [config
+directory](../../../../docs/step-by-step/step-04.md#find-your-netdataconf-file), which is typically at `/etc/netdata`.
+
+```bash
+cd /etc/netdata # Replace this path with your Netdata config directory
+sudo ./edit-config go.d/logstash.conf
+```
 
 Here is a simple example for local and remote server:
 

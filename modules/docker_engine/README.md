@@ -1,8 +1,8 @@
-# docker_engine
+# Docker Engine monitoring with Netdata
 
 [`Docker Engine`](https://docs.docker.com/engine/) is the industry’s de facto container runtime that runs on various Linux (CentOS, Debian, Fedora, Oracle Linux, RHEL, SUSE, and Ubuntu) and Windows Server operating systems.
 
-This module will monitor one or more `Docker Engines` depending on configuration.
+This module will monitor one or more `Docker Engines` applications, depending on your configuration.
 
 ## Requirements
 
@@ -25,6 +25,14 @@ If Docker is running in in [Swarm mode](https://docs.docker.com/engine/swarm/) a
 -   Swarm Manager Tasks Per State in `count`
 
 ## Configuration
+
+Edit the `go.d/docker_engine.conf` configuration file using `edit-config` from the your agent's [config
+directory](../../../../docs/step-by-step/step-04.md#find-your-netdataconf-file), which is typically at `/etc/netdata`.
+
+```bash
+cd /etc/netdata # Replace this path with your Netdata config directory
+sudo ./edit-config go.d/docker_engine.conf
+```
 
 Needs only `url` to docker `metric-address`. Here is an example for 2 docker instances:
 

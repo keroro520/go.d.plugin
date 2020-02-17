@@ -1,8 +1,8 @@
-# bind
+# Bind9 monitoring with Netdata
 
 [`Bind9`](https://www.isc.org/bind/) (or named) is a very flexible, full-featured DNS system. 
 
-This module will monitor one or more `Bind9` servers depending on configuration.
+This module will monitor one or more `Bind9` servers, depending on your configuration.
 
 ## Requirements
 
@@ -48,6 +48,14 @@ Per View Statistics (the following set will be added for each bind view):
 -   Resolver Cache Hits in `operations/s`
 
 ## Configuration
+
+Edit the `go.d/bind.conf` configuration file using `edit-config` from the your agent's [config
+directory](../../../../docs/step-by-step/step-04.md#find-your-netdataconf-file), which is typically at `/etc/netdata`.
+
+```bash
+cd /etc/netdata # Replace this path with your Netdata config directory
+sudo ./edit-config go.d/bind.conf
+```
 
 Needs only `url`. Here is an example for several servers:
 

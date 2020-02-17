@@ -1,4 +1,4 @@
-# hdfs
+# HDFS monitoring with Netdata
 
 The [`Hadoop Distributed File System (HDFS)`](https://hadoop.apache.org/docs/r1.2.1/hdfs_design.html) is a distributed file system designed to run on commodity hardware.
 
@@ -54,6 +54,14 @@ For `datanode`:
 -   Bandwidth in `KiB/s`
 
 ## Configuration
+
+Edit the `go.d/hdfs.conf` configuration file using `edit-config` from the your agent's [config
+directory](../../../../docs/step-by-step/step-04.md#find-your-netdataconf-file), which is typically at `/etc/netdata`.
+
+```bash
+cd /etc/netdata # Replace this path with your Netdata config directory
+sudo ./edit-config go.d/hdfs.conf
+```
 
 Needs only `url` to server's `/jmx` endpoint. Here is an example for 2 servers:
 

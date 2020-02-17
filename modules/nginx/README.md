@@ -1,12 +1,12 @@
-# nginx
+# NGINX monitoring with Netdata
 
-[`Nginx`](https://www.nginx.com/) is a web server which can also be used as a reverse proxy, load balancer, mail proxy and HTTP cache. 
+[`NGINX`](https://www.nginx.com/) is a web server which can also be used as a reverse proxy, load balancer, mail proxy and HTTP cache. 
 
-This module will monitor one or more [`Nginx`](https://www.nginx.com/) depending on configuration.
+This module will monitor one or more `NGINX` servers, depending on your configuration.
 
 ## Requirements
 
- -   `Nginx` with configured [`ngx_http_stub_status_module`](http://nginx.org/en/docs/http/ngx_http_stub_status_module.html).
+ -   `NGINX` with configured [`ngx_http_stub_status_module`](http://nginx.org/en/docs/http/ngx_http_stub_status_module.html).
 
 ## Charts
 
@@ -18,6 +18,14 @@ It produces following charts:
 -   Requests in `requests/s`
 
 ## Configuration
+
+Edit the `go.d/nginx.conf` configuration file using `edit-config` from the your agent's [config
+directory](../../../../docs/step-by-step/step-04.md#find-your-netdataconf-file), which is typically at `/etc/netdata`.
+
+```bash
+cd /etc/netdata # Replace this path with your Netdata config directory
+sudo ./edit-config go.d/nginx.conf
+```
 
 Needs only `url` to server's `stub_status`. Here is an example for local and remote servers:
 

@@ -1,4 +1,4 @@
-# wmi
+# Windows Machines monitoring with Netdata
 
 This module will monitor one or more Windows machines, using the [wmi_exporter](https://github.com/martinlindhe/wmi_exporter).
 
@@ -65,6 +65,14 @@ Installation: please follow [official guide](https://github.com/martinlindhe/wmi
 -   Active User Logon Sessions By Type in `sessions`
   
 ## Configuration
+
+Edit the `go.d/wmi.conf` configuration file using `edit-config` from the your agent's [config
+directory](../../../../docs/step-by-step/step-04.md#find-your-netdataconf-file), which is typically at `/etc/netdata`.
+
+```bash
+cd /etc/netdata # Replace this path with your Netdata config directory
+sudo ./edit-config go.d/wmi.conf
+```
 
 Needs only `url` to `wmi_exporter` metrics endpoint. Here is an example for 2 instances:
 

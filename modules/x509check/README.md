@@ -1,4 +1,4 @@
-# x509check
+# x509 certificates monitoring with Netdata
 
 This module checks the time until a x509 certificate expiration.
 
@@ -9,6 +9,14 @@ It produces only one chart:
 -   Time Until Certificate Expiration in `seconds`
  
 ## Configuration
+
+Edit the `go.d/x509check.conf` configuration file using `edit-config` from the your agent's [config
+directory](../../../../docs/step-by-step/step-04.md#find-your-netdataconf-file), which is typically at `/etc/netdata`.
+
+```bash
+cd /etc/netdata # Replace this path with your Netdata config directory
+sudo ./edit-config go.d/x509check.conf
+```
 
 Needs only `source`.
 

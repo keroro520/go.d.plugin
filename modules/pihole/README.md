@@ -1,4 +1,4 @@
-# pihole
+# Pi-hole monitoring with Netdata
 
 [`Pi-hole`](https://pi-hole.net) is a Linux network-level advertisement and Internet tracker blocking application which acts as a DNS sinkhole, intended for use on a private network.
 
@@ -27,6 +27,14 @@ If the web password is set and valid following charts will be added:
 -   Top Blocked Domains in `hits`
 
 ## Configuration
+
+Edit the `go.d/pihole.conf` configuration file using `edit-config` from the your agent's [config
+directory](../../../../docs/step-by-step/step-04.md#find-your-netdataconf-file), which is typically at `/etc/netdata`.
+
+```bash
+cd /etc/netdata # Replace this path with your Netdata config directory
+sudo ./edit-config go.d/pihole.conf
+```
 
 Module automatically detects `Pihole` web password reading `setupVars.conf` file. It expects to find the file in the `/etc/pihole/` directory.
 

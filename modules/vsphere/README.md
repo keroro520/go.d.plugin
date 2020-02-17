@@ -1,4 +1,4 @@
-# vsphere
+# VMware vCenter Server (vSphere) monitoring with Netdata
 
 [`VMware vCenter Server`](https://www.vmware.com/products/vcenter-server.html) is advanced server management software that provides a centralized platform for controlling your VMware vSphere environments.
 
@@ -38,6 +38,14 @@ For every host:
 -   System Uptime in `seconds`
 
 ## Configuration
+
+Edit the `go.d/vsphere.conf` configuration file using `edit-config` from the your agent's [config
+directory](../../../../docs/step-by-step/step-04.md#find-your-netdataconf-file), which is typically at `/etc/netdata`.
+
+```bash
+cd /etc/netdata # Replace this path with your Netdata config directory
+sudo ./edit-config go.d/vsphere.conf
+```
 
 Needs only `url`, `username` and `password`. Here is an example for 2 servers:
 
