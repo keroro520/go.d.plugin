@@ -2,20 +2,20 @@ package ckb
 
 import (
 	"github.com/netdata/go-orchestrator/module"
-	"os"
 	"io"
+	"os"
 )
 
 func init() {
 	module.Register("ckb", module.Creator{
-		Defaults: module.Defaults{ Disabled: true, },
-		Create: func() module.Module { return New() },
+		Defaults: module.Defaults{Disabled: true},
+		Create:   func() module.Module { return New() },
 	})
 }
 
 func New() *Ckb {
 	return &Ckb{
-		Config: defaultConfig(),
+		Config:  defaultConfig(),
 		metrics: make(map[string]int64),
 	}
 }
@@ -70,9 +70,9 @@ func (c *Ckb) Collect() map[string]int64 {
 			c.Errorf("error on reading logfile: %v", err)
 			break
 		} else {
-			if _, ok := c.metrics[metric.Measurement]; ok {
+			if _, ok := c.metrics[metric.Topic]; ok {
 				c.Debugf("read a metric: %v", metric)
-				c.metrics[metric.Measurement] += 1
+				c.metrics[metric.Topic] += 1
 			}
 		}
 	}

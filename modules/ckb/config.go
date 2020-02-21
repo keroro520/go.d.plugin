@@ -2,7 +2,7 @@ package ckb
 
 const defaultPath = "/var/log/ckb/data/logs/run.log"
 
-type Config struct  {
+type Config struct {
 	Path string `yaml:"path"`
 }
 

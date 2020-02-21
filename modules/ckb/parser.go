@@ -1,28 +1,28 @@
 package ckb
 
 import (
-	"os"
-	"encoding/json"
 	"bufio"
-	"strings"
+	"encoding/json"
 	"errors"
+	"os"
+	"strings"
 )
 
 type Metric struct {
-	Measurement string `json:"measurement"`
-	Tags map[string]string `json:"tags"`
+	Topic  string            `json:"topic"`
+	Tags   map[string]string `json:"tags"`
 	Fields map[string]uint64 `json:"fields"`
 }
 
 type Parser struct {
-	file *os.File
+	file   *os.File
 	reader *bufio.Reader
 }
 
 func NewParser(file *os.File) *Parser {
 	reader := bufio.NewReader(file)
 	parser := Parser{
-		file: file,
+		file:   file,
 		reader: reader,
 	}
 	return &parser
