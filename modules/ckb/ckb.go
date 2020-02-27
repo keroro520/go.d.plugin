@@ -1,6 +1,7 @@
 package ckb
 
 import (
+    "github.com/coreos/go-systemd/journal"
 	"github.com/netdata/go-orchestrator/module"
 	"io"
 	"os"
