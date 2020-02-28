@@ -1,13 +1,14 @@
 package ckb
 
-const defaultPath = "/var/log/ckb/data/logs/run.log"
-
+// `Path` and `Journal` are mutually exclusive
 type Config struct {
-	Path string `yaml:"path"`
+	Path    string `yaml:"path"`
+	Journal string `yaml:"journal"`
 }
 
 func defaultConfig() Config {
-	return Config{
-		Path: defaultPath,
+	return Config {
+		Path: "",
+		Journal: "",
 	}
 }

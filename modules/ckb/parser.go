@@ -3,9 +3,9 @@ package ckb
 import (
 	"bufio"
 	"encoding/json"
-	"errors"
 	"os"
 	"strings"
+	"github.com/coreos/go-systemd/sdjournal"
 )
 
 type Metric struct {
@@ -17,12 +17,22 @@ type Metric struct {
 type Parser struct {
 	file   *os.File
 	reader *bufio.Reader
+	journal *sdjournal.JournalReader
 }
 
-func NewParser(file *os.File) *Parser {
+func NewFileParser(file *os.File) *Parser {
 	reader := bufio.NewReader(file)
 	parser := Parser{
 		file:   file,
+		reader: reader,
+	}
+	return &parser
+}
+
+func NewJournalParser(journal *sdjournal.JournalReader) *Parser {
+	reader := bufio.NewReader(journal)
+	parser := Parser{
+		journal: journal,
 		reader: reader,
 	}
 	return &parser
@@ -36,7 +46,7 @@ func (p *Parser) ReadLine() (*Metric, error) {
 
 	index := strings.Index(line, "ckb-metrics ")
 	if index == -1 {
-		return nil, errors.New("not a metric line")
+		return nil, nil
 	}
 
 	var metric Metric
@@ -51,7 +61,12 @@ func (p *Parser) ReadLine() (*Metric, error) {
 func (p *Parser) Close() {
 	if p.file != nil {
 		p.file.Close()
-		p.reader = nil
 		p.file = nil
+		p.reader = nil
+	}
+	if p.journal != nil {
+		p.journal.Close()
+		p.journal = nil
+		p.reader = nil
 	}
 }
