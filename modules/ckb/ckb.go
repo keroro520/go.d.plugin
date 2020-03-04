@@ -29,13 +29,14 @@ type Ckb struct {
 
 	parser  *Parser
 	metrics map[string]int64
+	charts  module.Charts
 }
 
 // `Init` initializes metric-items and charts
 // `Check` initializes file
 
 func (c *Ckb) Init() bool {
-	for _, chart := range charts {
+	for _, chart := range *c.Charts() {
 		for _, dim := range chart.Dims {
 			c.metrics[dim.ID] = 0
 		}
@@ -81,7 +82,10 @@ func (c *Ckb) Check() bool {
 	return true
 }
 
-func (Ckb) Charts() *Charts { return charts.Copy() }
+func (c *Ckb) Charts() *module.Charts {
+	charts := append(c.Config.Charts, BuiltinCharts...)
+	return charts.Copy()
+}
 
 func (c *Ckb) Collect() map[string]int64 {
 	if c.parser == nil {
