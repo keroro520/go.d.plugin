@@ -7,7 +7,10 @@ import (
 	"os"
 	"time"
 	"strings"
+	"fmt"
 )
+
+// TODO dimAlgo: Inc, Maximum and so on
 
 func init() {
 	module.Register("ckb", module.Creator{
@@ -84,6 +87,28 @@ func (c *Ckb) Check() bool {
 
 func (c *Ckb) Charts() *module.Charts {
 	charts := append(c.Config.Charts, BuiltinCharts...)
+	for _, chart := range charts{
+		if chart.ID == "" {
+			chart.ID = chart.Title
+		}
+
+		for _, dim := range chart.Dims {
+			if dim.ID == "" {
+				dim.ID = fmt.Sprintf("%s-%s", chart.Title, dim.Name)
+			}
+		}
+
+		if len(chart.Dims) == 0 {
+			if err := chart.AddDim(&module.Dim{
+				ID: fmt.Sprintf("%s-count", chart.Title),
+				Name: "count",
+				Algo: module.Absolute,
+			}); err != nil {
+				c.Errorf("Fail on creating chart %s", chart.Title)
+				return nil
+			}
+		}
+	}
 	return charts.Copy()
 }
 
@@ -93,7 +118,9 @@ func (c *Ckb) Collect() map[string]int64 {
 	}
 
 	for dimId := range c.metrics {
-		c.metrics[dimId] = 0
+		if strings.HasSuffix(dimId, "-count") {
+			c.metrics[dimId] = 0
+		}
 	}
 
 	for {
@@ -102,9 +129,19 @@ func (c *Ckb) Collect() map[string]int64 {
 			break
 		} else if metric == nil { // Unmatched or parse error
 			continue
-		} else if err == nil {    // Matched
-			if _, ok := c.metrics[metric.Topic]; ok {
-				c.metrics[metric.Topic] += 1
+		} else if err == nil {    // A metric entry
+			if len(metric.Fields) == 0 {	// A metric entry without any fields
+				measurement := fmt.Sprintf("%s-count", metric.Topic)
+				if _, ok := c.metrics[measurement]; ok {
+					c.metrics[measurement] += 1
+				}
+			} else {
+				for field, value := range metric.Fields {
+					measurement := fmt.Sprintf("%s-%s", metric.Topic, field)
+					if _, ok := c.metrics[measurement]; ok {
+						c.metrics[measurement] = int64(value)
+					}
+				}
 			}
 		}
 	}
