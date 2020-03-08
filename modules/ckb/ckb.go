@@ -8,9 +8,13 @@ import (
 	"time"
 	"strings"
 	"fmt"
+	"regexp"
 )
 
-// TODO dimAlgo: Inc, Maximum and so on
+type DimIdAlgo struct {
+	ID string
+	Algo string
+}
 
 func init() {
 	module.Register("ckb", module.Creator{
@@ -21,8 +25,10 @@ func init() {
 
 func New() *Ckb {
 	return &Ckb{
-		Config:  defaultConfig(),
-		metrics: make(map[string]int64),
+		Config:           defaultConfig(),
+		metrics:          make(map[string]int64),
+		charts: nil,
+		FieldToDimIdAlgo: make(map[string][]DimIdAlgo),
 	}
 }
 
@@ -30,20 +36,21 @@ type Ckb struct {
 	module.Base
 	Config `yaml:",inline"`
 
-	parser  *Parser
-	metrics map[string]int64
-	charts  module.Charts
+	parser           *Parser
+	metrics          map[string]int64
+	charts           module.Charts
+	FieldToDimIdAlgo map[string][]DimIdAlgo
 }
 
-// `Init` initializes metric-items and charts
-// `Check` initializes file
-
 func (c *Ckb) Init() bool {
-	for _, chart := range *c.Charts() {
+	c.charts = *c.Charts()
+	
+	for _, chart := range c.charts {
 		for _, dim := range chart.Dims {
 			c.metrics[dim.ID] = 0
 		}
 	}
+
 	return true
 }
 
@@ -51,16 +58,16 @@ func (c *Ckb) Check() bool {
 	// Note: these inits are here to make auto detection retry working
 	c.Cleanup()
 
-	if c.Journal != "" {
-		if !strings.HasSuffix(c.Journal, ".service") {
-			c.Journal = c.Journal + ".service"
+	if c.LogToJournal != "" {
+		if !strings.HasSuffix(c.LogToJournal, ".service") {
+			c.LogToJournal = c.LogToJournal+ ".service"
 		}
 		config := sdjournal.JournalReaderConfig{
 			Since: time.Second,
 			Matches: []sdjournal.Match{
 				{
 					Field: sdjournal.SD_JOURNAL_FIELD_SYSTEMD_UNIT,
-					Value: c.Journal,
+					Value: c.LogToJournal,
 				},
 			},
 		}
@@ -69,16 +76,16 @@ func (c *Ckb) Check() bool {
 			c.Errorf("error on creating journal reader: %v", err)
 			return false
 		}
-		c.Infof("using journal log like `sudo journalctl -u %s -f`", c.Journal)
+		c.Infof("using journal log like `sudo journalctl -u %s -f`", c.LogToJournal)
 		c.parser = NewJournalParser(journal)
 	} else {
-		file, err := os.Open(c.Path)
+		file, err := os.Open(c.LogToFile)
 		if err != nil {
 			c.Errorf("error on opening log file: %v", err)
 			return false
 		}
 		file.Seek(0, io.SeekEnd)
-		c.Infof("using file log %s", c.Path)
+		c.Infof("using file log %s", c.LogToFile)
 		c.parser = NewFileParser(file)
 	}
 
@@ -86,29 +93,60 @@ func (c *Ckb) Check() bool {
 }
 
 func (c *Ckb) Charts() *module.Charts {
-	charts := append(c.Config.Charts, BuiltinCharts...)
-	for _, chart := range charts{
+	if c.charts != nil {
+		return &c.charts
+	}
+
+	charts := c.Config.Charts
+
+	// Use chart.title as chart.id if empty
+	for _, chart := range charts {
 		if chart.ID == "" {
 			chart.ID = chart.Title
 		}
+	}
 
+	// Parse dim.name into below formats:
+	//   - "<name>:last(<field>)", last absolute number during checking period
+	//   - "<name>:inc(<field>)", incremental to the latest value at the last one round checking
+	//   - "<name>:max(<field>)", max during checking period, and will be reset to zero every time
+	//   - "<name>:min(<field>)", min during checking period, and will be reset to zero every time
+	//   - "<name>:sum(<field>)", sum during checking period, and will be reset to zero every time
+	//   - "<name>:total(<field>)", sum all the history
+	pattern := regexp.MustCompile(`^([a-zA-Z0-9_.]*):(last|inc|max|min|sum|total)\(([a-zA-Z0-9_.]*)\)$`)
+	for _, chart := range charts {
 		for _, dim := range chart.Dims {
-			if dim.ID == "" {
-				dim.ID = fmt.Sprintf("%s-%s", chart.Title, dim.Name)
+			matches := pattern.FindStringSubmatch(dim.Name)
+			if matches == nil || len(matches) != 4 {
+				c.Errorf("Invalid dim.Name: %s, ignore it", dim.Name)
+				continue
 			}
-		}
+			name, algo, field := matches[1], matches[2], matches[3]
 
-		if len(chart.Dims) == 0 {
-			if err := chart.AddDim(&module.Dim{
-				ID: fmt.Sprintf("%s-count", chart.Title),
-				Name: "count",
-				Algo: module.Absolute,
-			}); err != nil {
-				c.Errorf("Fail on creating chart %s", chart.Title)
-				return nil
+			dim.Name = name
+			if dim.ID == "" {
+				dim.ID = fmt.Sprintf("%s.%s", chart.Title, dim.Name)
 			}
+
+			switch algo {
+			case "inc":
+				dim.Algo = module.Incremental
+			default:
+				dim.Algo = module.Absolute
+			}
+
+			dimIdAlgo := DimIdAlgo{ID: dim.ID, Algo: algo}
+			if l, ok := c.FieldToDimIdAlgo[field]; ok {
+				c.FieldToDimIdAlgo[field] = append(l, dimIdAlgo)
+			} else {
+				l := make([]DimIdAlgo, 0)
+				c.FieldToDimIdAlgo[field] = append(l, dimIdAlgo)
+			}
+
+			c.Infof("[ckb_config] New Dim: chart.id(%s), dim.id(%s), dim.name(%s), dim.measurement(%s), dim.algo(%s), dim.handler(%s)", chart.ID, dim.ID, dim.Name, field, dim.Algo, dimIdAlgo.Algo)
 		}
 	}
+
 	return charts.Copy()
 }
 
@@ -117,9 +155,13 @@ func (c *Ckb) Collect() map[string]int64 {
 		return c.metrics
 	}
 
-	for dimId := range c.metrics {
-		if strings.HasSuffix(dimId, "-count") {
-			c.metrics[dimId] = 0
+	// Reset metrics for reset-to-zero algorithms
+	for _, dimIdAlgos := range c.FieldToDimIdAlgo {
+		for _, dimIdAlgo := range dimIdAlgos {
+			switch dimIdAlgo.Algo {
+			case "max","min","sum":
+				c.metrics[dimIdAlgo.ID] = 0
+			}
 		}
 	}
 
@@ -130,16 +172,27 @@ func (c *Ckb) Collect() map[string]int64 {
 		} else if metric == nil { // Unmatched or parse error
 			continue
 		} else if err == nil {    // A metric entry
-			if len(metric.Fields) == 0 {	// A metric entry without any fields
-				measurement := fmt.Sprintf("%s-count", metric.Topic)
-				if _, ok := c.metrics[measurement]; ok {
-					c.metrics[measurement] += 1
-				}
-			} else {
-				for field, value := range metric.Fields {
-					measurement := fmt.Sprintf("%s-%s", metric.Topic, field)
-					if _, ok := c.metrics[measurement]; ok {
-						c.metrics[measurement] = int64(value)
+			c.preprocess(metric)
+
+			for field, value := range metric.Fields {
+				if dimIdAlgos, ok := c.FieldToDimIdAlgo[field]; ok {
+					for _, dimIdAlgo := range dimIdAlgos {
+						value := int64(value)
+						dimId, algo := dimIdAlgo.ID, dimIdAlgo.Algo
+						switch algo {
+						case "inc","last":
+							c.metrics[dimId] = value
+						case "min":
+							if old, ok := c.metrics[dimId]; ok && (old == 0 || old > value) {
+								c.metrics[dimId] = value
+							}
+						case "max":
+							if old, ok := c.metrics[dimId]; ok && (old == 0 || old < value) {
+								c.metrics[dimId] = value
+							}
+						case "sum","total":
+							c.metrics[dimId] += value
+						}
 					}
 				}
 			}
@@ -147,6 +200,18 @@ func (c *Ckb) Collect() map[string]int64 {
 	}
 
 	return c.metrics
+}
+
+func (c *Ckb) preprocess(metric *Metric) {
+	if len(metric.Fields) == 0 {
+		metric.Fields[metric.Topic] = 1
+	}
+
+	newFields := make(map[string]uint64, 0)
+	for field, value := range metric.Fields {
+		newFields[fmt.Sprintf("%s.%s", metric.Topic, field)] = value
+	}
+	metric.Fields = newFields
 }
 
 func (c *Ckb) Cleanup() {
