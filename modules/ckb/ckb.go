@@ -27,6 +27,7 @@ func New() *Ckb {
 	return &Ckb{
 		Config:           defaultConfig(),
 		metrics:          make(map[string]int64),
+		inc:          make(map[string]int64),
 		charts: nil,
 		FieldToDimIdAlgo: make(map[string][]DimIdAlgo),
 	}
@@ -38,16 +39,27 @@ type Ckb struct {
 
 	parser           *Parser
 	metrics          map[string]int64
+	inc              map[string]int64
 	charts           module.Charts
 	FieldToDimIdAlgo map[string][]DimIdAlgo
+    lastcheck        time.Time
 }
 
 func (c *Ckb) Init() bool {
 	c.charts = *c.Charts()
-	
+
 	for _, chart := range c.charts {
 		for _, dim := range chart.Dims {
 			c.metrics[dim.ID] = 0
+		}
+	}
+
+	for _, dimAlgos := range c.FieldToDimIdAlgo {
+		for _, dimAlgo := range dimAlgos {
+			switch dimAlgo.Algo {
+			case "inc":
+				c.inc[dimAlgo.ID] = 0
+			}
 		}
 	}
 
@@ -56,6 +68,7 @@ func (c *Ckb) Init() bool {
 
 func (c *Ckb) Check() bool {
 	// Note: these inits are here to make auto detection retry working
+    c.lastcheck = time.Now()
 	c.Cleanup()
 
 	if c.LogToJournal != "" {
@@ -112,8 +125,9 @@ func (c *Ckb) Charts() *module.Charts {
 	//   - "<name>:max(<field>)", max during checking period, and will be reset to zero every time
 	//   - "<name>:min(<field>)", min during checking period, and will be reset to zero every time
 	//   - "<name>:sum(<field>)", sum during checking period, and will be reset to zero every time
+	//   - "<name>:neg_sum(<field>)", sum in negative during checking period, and will be reset to zero every time
 	//   - "<name>:total(<field>)", sum all the history
-	pattern := regexp.MustCompile(`^([a-zA-Z0-9_.]*):(last|inc|max|min|sum|total)\(([a-zA-Z0-9_.]*)\)$`)
+	pattern := regexp.MustCompile(`^([a-zA-Z0-9_.]*):(last|inc|max|min|sum|neg_sum|total)\(([a-zA-Z0-9_.]*)\)$`)
 	for _, chart := range charts {
 		for _, dim := range chart.Dims {
 			matches := pattern.FindStringSubmatch(dim.Name)
@@ -124,15 +138,9 @@ func (c *Ckb) Charts() *module.Charts {
 			name, algo, field := matches[1], matches[2], matches[3]
 
 			dim.Name = name
+			dim.Algo = module.Absolute
 			if dim.ID == "" {
 				dim.ID = fmt.Sprintf("%s.%s", chart.Title, dim.Name)
-			}
-
-			switch algo {
-			case "inc":
-				dim.Algo = module.Incremental
-			default:
-				dim.Algo = module.Absolute
 			}
 
 			dimIdAlgo := DimIdAlgo{ID: dim.ID, Algo: algo}
@@ -151,15 +159,17 @@ func (c *Ckb) Charts() *module.Charts {
 }
 
 func (c *Ckb) Collect() map[string]int64 {
-	if c.parser == nil {
-		return c.metrics
+    if time.Now().Sub(c.lastcheck) >= 60 * time.Second && c.Check() {
+        return c.Collect()
+    } else if c.parser == nil {
+        return c.metrics
 	}
 
 	// Reset metrics for reset-to-zero algorithms
 	for _, dimIdAlgos := range c.FieldToDimIdAlgo {
 		for _, dimIdAlgo := range dimIdAlgos {
 			switch dimIdAlgo.Algo {
-			case "max","min","sum":
+			case "max","min","sum","neg_sum","inc":
 				c.metrics[dimIdAlgo.ID] = 0
 			}
 		}
@@ -180,8 +190,10 @@ func (c *Ckb) Collect() map[string]int64 {
 						value := int64(value)
 						dimId, algo := dimIdAlgo.ID, dimIdAlgo.Algo
 						switch algo {
-						case "inc","last":
+						case "last":
 							c.metrics[dimId] = value
+						case "inc":
+							c.metrics[dimId] = value - c.inc[dimId]
 						case "min":
 							if old, ok := c.metrics[dimId]; ok && (old == 0 || old > value) {
 								c.metrics[dimId] = value
@@ -190,11 +202,26 @@ func (c *Ckb) Collect() map[string]int64 {
 							if old, ok := c.metrics[dimId]; ok && (old == 0 || old < value) {
 								c.metrics[dimId] = value
 							}
+                        case "neg_sum":
+							c.metrics[dimId] -= value
 						case "sum","total":
 							c.metrics[dimId] += value
 						}
 					}
 				}
+			}
+		}
+	}
+
+	for _, dimAlgos := range c.FieldToDimIdAlgo {
+		for _, dimAlgo := range dimAlgos {
+			dimId, algo := dimAlgo.ID, dimAlgo.Algo
+			switch algo {
+			case "inc":
+				c.inc[dimId] = c.inc[dimId] + c.metrics[dimId]
+				c.metrics[dimId] = c.metrics[dimId] / int64(c.UpdateEvery)
+			case "sum","neg_sum":
+				c.metrics[dimId] = c.metrics[dimId] / int64(c.UpdateEvery)
 			}
 		}
 	}
