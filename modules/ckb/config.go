@@ -7,6 +7,7 @@ type Config struct {
 	LogToFile string `yaml:"log_to_file"`
 	LogToJournal string `yaml:"log_to_journal"`
 	Charts  module.Charts `yaml:"charts"`
+	UpdateEvery int `yaml:"update_every"`
 }
 
 func defaultConfig() Config {
